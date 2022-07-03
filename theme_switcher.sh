@@ -2,8 +2,21 @@
 set -e
 shopt -s failglob
 
-GREEN='\e[32m'
 NORMAL='\e[0m'
+RED='\e[31m'
+GREEN='\e[32m'
+
+if [ "$EUID" == 0 ]; then
+    echo -e "${RED}ERROR: This script cannot be run as root$NORMAL"
+    exit 1
+fi
+
+GTK2_FILE="$HOME/.gtkrc-2.0"
+[ -n "$XDG_CONFIG_HOME" ] &&
+    GTK3_FILE="$XDG_CONFIG_HOME/gtk-3.0/settings.ini" ||
+    GTK3_FILE="$HOME/.config/gtk-3.0/settings.ini"
+
+QT4_FILE="$HOME/.config/Trolltech.conf"
 
 PS3="Choose a theme: "
 select THEME in $(ls /usr/share/themes); do
@@ -24,17 +37,33 @@ echo
 
 read -rp "Continue? (Ctrl-C to cancel)"
 
-if [ -n "$WAYLAND_DISPLAY" ]; then
-    gsettings set org.gnome.desktop.interface gtk-theme "Dracula"
-    gsettings set org.gnome.desktop.wm.preferences theme "Dracula"
-else
-    echo "gtk-theme-name=$THEME"      > "$HOME/.gtkrc-2.0"
-    echo "gtk-icon-theme-name=$ICON" >> "$HOME/.gtkrc-2.0"
+# GTK3/4 Wayland
+gsettings set org.gnome.desktop.interface gtk-theme "$THEME"
+gsettings set org.gnome.desktop.wm.preferences theme "$ICON"
 
-    mkdir -p "$HOME/.config/gtk-3.0"
-    echo "[Settings]"                 > "$HOME/.config/gtk-3.0/settings.ini"
-    echo "gtk-theme-name=$THEME"     >> "$HOME/.config/gtk-3.0/settings.ini"
-    echo "gtk-icon-theme-name=$ICON" >> "$HOME/.config/gtk-3.0/settings.ini"
+# GTK2/3
+cat << EOF > "$GTK2_FILE"
+gtk-theme-name = "$THEME"
+gtk-icon-theme-name = "$ICON"
+EOF
 
-    echo "QT_STYLE_OVERRIDE=$THEME" | sudo tee -a /etc/environment
-fi
+mkdir -p "$(dirname "$GTK3_FILE")"
+cat << EOF > "$GTK3_FILE"
+[Settings]
+gtk-theme-name = $THEME
+gtk-icon-theme-name = $ICON
+EOF
+
+# QT5
+cat << EOF | sudo tee -a /etc/environment > /dev/null
+XDG_CURRENT_DESKTOP=Unity
+QT_STYLE_OVERRIDE=$THEME
+EOF
+
+# QT4
+cat << EOF > "$QT4_FILE"
+[Qt]
+style = $THEME
+EOF
+
+echo "${GREEN}DONE. Restart for all the changes to take effect.$NORMAL"
