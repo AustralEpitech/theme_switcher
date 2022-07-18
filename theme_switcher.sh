@@ -66,4 +66,4 @@ cat << EOF > "$QT4_FILE"
 style = $THEME
 EOF
 
-echo "${GREEN}DONE. Restart for all the changes to take effect.$NORMAL"
+echo -e "${GREEN}DONE. Restart for all the changes to take effect.$NORMAL"
