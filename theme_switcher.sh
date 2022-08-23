@@ -7,7 +7,7 @@ RED='\e[31m'
 GREEN='\e[32m'
 
 if [ "$EUID" == 0 ]; then
-    echo -e "${RED}ERROR: This script cannot be run as root$NORMAL"
+    echo -e "${RED}ERROR: This script cannot be run as root${NORMAL}"
     exit 1
 fi
 
@@ -41,12 +41,7 @@ read -rp "Continue? (Ctrl-C to cancel)"
 gsettings set org.gnome.desktop.interface gtk-theme "$THEME"
 gsettings set org.gnome.desktop.wm.preferences theme "$ICON"
 
-# GTK2/3
-cat << EOF > "$GTK2_FILE"
-gtk-theme-name = "$THEME"
-gtk-icon-theme-name = "$ICON"
-EOF
-
+# GTK3
 mkdir -p "$(dirname "$GTK3_FILE")"
 cat << EOF > "$GTK3_FILE"
 [Settings]
@@ -54,10 +49,20 @@ gtk-theme-name = $THEME
 gtk-icon-theme-name = $ICON
 EOF
 
+# GTK2
+cat << EOF > "$GTK2_FILE"
+gtk-theme-name = "$THEME"
+gtk-icon-theme-name = "$ICON"
+EOF
+
 # QT5
-cat << EOF | sudo tee -a /etc/environment > /dev/null
+sudo -s -- << EOF
+touch /etc/environment
+sed -i '/XDG_CURRENT_DESKTOP=/d; /QT_STYLE_OVERRIDE=/d' /etc/environment
+cat << FOF >> /etc/environment
 XDG_CURRENT_DESKTOP=Unity
 QT_STYLE_OVERRIDE=$THEME
+FOF
 EOF
 
 # QT4
@@ -66,4 +71,4 @@ cat << EOF > "$QT4_FILE"
 style = $THEME
 EOF
 
-echo -e "${GREEN}DONE. Restart for all the changes to take effect.$NORMAL"
+echo -e "${GREEN}DONE. log out and in for the changes to take effect.${NORMAL}"
