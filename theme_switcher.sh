@@ -68,7 +68,7 @@ EOF
 # QT4
 cat << EOF > "$QT4_FILE"
 [Qt]
-style = $THEME
+style=$THEME
 EOF
 
 echo -e "${GREEN}DONE. log out and in for the changes to take effect.${NORMAL}"
