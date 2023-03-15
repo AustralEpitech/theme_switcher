@@ -39,7 +39,8 @@ read -rp "Continue? (Ctrl-C to cancel)"
 
 # GTK3/4 Wayland
 gsettings set org.gnome.desktop.interface gtk-theme "$THEME"
-gsettings set org.gnome.desktop.wm.preferences theme "$ICON"
+gsettings set org.gnome.desktop.wm.preferences theme "$THEME"
+gsettings set org.gnome.desktop.interface icon-theme "$ICON"
 
 # GTK3
 mkdir -p "$(dirname "$GTK3_FILE")"
